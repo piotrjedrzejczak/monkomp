@@ -1,5 +1,5 @@
-from monkomp.api.exceptions import ValidationError
-from monkomp.api import api
+from api.exceptions import ValidationError
+from api import api
 from flask import jsonify
 
 

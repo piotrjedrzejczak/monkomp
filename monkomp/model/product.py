@@ -1,4 +1,4 @@
-from monkomp.monkomp import db
+from monkomp import db
 
 class Product(db.Model):
     __tablename__ = 'Product'

@@ -1,6 +1,6 @@
 from .engineer import Engineer
 from .service import Service
-from monkomp.monkomp import db
+from monkomp import db
 
 
 class FieldCall(db.Model):

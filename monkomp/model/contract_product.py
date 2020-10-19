@@ -1,4 +1,4 @@
-from monkomp.monkomp import db
+from monkomp import db
 from .contract import Contract
 from .product import Product
 
