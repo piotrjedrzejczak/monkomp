@@ -1,6 +1,7 @@
-from monkomp.api.exceptions import ValidationError
+from sqlalchemy.orm import validates
 from re import match
-from monkomp.monkomp import db
+from api.exceptions import ValidationError
+from monkomp import db
 from .contract import Contract
 from .field_call import FieldCall
 
@@ -23,42 +24,8 @@ class Customer(db.Model):
     contracts = db.relationship('Contract')
     field_calls = db.relationship('FieldCall')
 
-    @property
-    def nip(self):
-        return self._nip
-
-    @nip.setter
-    def nip(self, nip):
-        if len(nip) != 10:
-            raise ValidationError(f'Valid NIP Number has exactly ten digits, the one you passed has [{len(nip)}].')
-        if not nip.isdigit():
-            raise ValidationError('Valid NIP Number only consists of digits.')
-        checksum = sum(int(x) * y for x, y in zip(nip[:9], [6,5,7,2,3,4,5,6,7]))
-        if checksum % 11 != int(nip[-1]):
-            raise ValidationError('Modulo checksum failed. You provided Invalid NIP Number.')
-        self._nip = nip
-
-    @property
-    def telephone(self):
-        return self._telephone
-
-    @telephone.setter
-    def telephone(self, number):
-        if not number.isdigit():
-            raise ValidationError('Valid telephone number only consists of digits.')
-        if len(number) != 9:
-            raise ValidationError(f'Valid telephone number has exactly nine digits, the one you passed has [{len(number)}].')
-        self._telephone = number
-
-    @property
-    def postal_code(self):
-        return self._postal_code
-
-    @postal_code.setter
-    def postal_code(self, code):
-        if match(r'\d{2}-\d{3}', code) is None:
-            raise ValidationError('Provided postal code does not comply with the valid format [XX-XXX] where X stands for a digit.')
-        self._postal_code = code
+    def __repr__(self):
+        return str(self.__dict__)
 
     @property
     def serialize(self):
@@ -86,3 +53,28 @@ class Customer(db.Model):
             except KeyError:
                 raise ValidationError(f'Required attribute missing [{field}].')
         return cls(**serialized)
+
+    @validates('nip')
+    def validate_nip(self, key, nip):
+        if len(nip) != 10:
+            raise ValidationError(f'Valid NIP Number has exactly ten digits, the one you passed has [{len(nip)}].')
+        if not nip.isdigit():
+            raise ValidationError('Valid NIP Number only consists of digits.')
+        checksum = sum(int(x) * y for x, y in zip(nip[:9], [6,5,7,2,3,4,5,6,7]))
+        if checksum % 11 != int(nip[-1]):
+            raise ValidationError('Modulo checksum failed. You provided Invalid NIP Number.')
+        return nip
+    
+    @validates('telephone')
+    def validate_telephone(self, key, number):
+        if not number.isdigit():
+            raise ValidationError('Valid telephone number only consists of digits.')
+        if len(number) != 9:
+            raise ValidationError(f'Valid telephone number has exactly nine digits, the one you passed has [{len(number)}].')
+        return number
+
+    @validates('postal_code')
+    def validate_postal_code(self, key, code):
+        if match(r'\d{2}-\d{3}', code) is None:
+            raise ValidationError('Provided postal code does not comply with the valid format [XX-XXX] where X stands for a digit.')
+        return code
