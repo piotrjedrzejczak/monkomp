@@ -1,5 +1,5 @@
-from api.exceptions import ValidationError
-from api import api
+from monkomp.api.exceptions import ValidationError
+from monkomp.api import api
 from flask import jsonify
 
 
@@ -11,3 +11,14 @@ def bad_request(message):
 @api.errorhandler(ValidationError)
 def validation_error(error):
     return bad_request(error.args[0])
+
+def integrity_error_parser(error):
+    message = repr(error.orig)
+    if message.find('UNIQUE') > 0:
+        field = message.partition('.')[2][:-2]
+        return f'Customer with this {field} already exists.'
+    elif message.find('NOT NULL') > 0:
+        field = message.partition('.')[2][:-2]
+        return f'Field {field} cannot be empty.'
+    else:
+        return repr(error.orig)

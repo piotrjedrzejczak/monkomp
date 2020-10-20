@@ -37,11 +37,28 @@ class APITest(unittest.TestCase):
 		self.assertEqual(response.status_code, 201)
 		self.assertEqual(response.get_json(), {"added":"1"})
 
+		# Try to create a customer with invalid fields
+		inv_customer = {
+			'firstname': 'Jan',
+			'lastname': 'Kowalski',
+			'company_name': 'Jan Kowalski & Co',
+			'city': 'Sosnowiec',
+			'street': 'Wiejska 12',
+			'email': 'jkco@giemail.com',
+			'postal_code': '83-050',
+			'nip': '6666666666',
+			'telephone': '777888999',
+			'comments': '',
+			'xd': 'xd'
+		}
+		response = self.client.post('/customers/new', json=inv_customer)
+		self.assertEqual(response.status_code, 400)
+		self.assertEqual(response.get_json(), {"error":"Bad Request","message":"'xd' is an invalid keyword argument for Customer"})
+
 		# Try to duplicate unique attributes
 		response = self.client.post('/customers/new', json=customer)
 		self.assertEqual(response.status_code, 400)
 		assert response.get_json()['message'].startswith('Customer with this')
-		# self.assertEqual(response.get_json()[, {"error":"Bad Request","message":"Customer with this nip already exists."})
 
 		# Try to create customer with invalid data
 		invalid_data = 12
@@ -59,7 +76,7 @@ class APITest(unittest.TestCase):
 		empty_customer = {}
 		response = self.client.post('/customers/new', json=empty_customer)
 		self.assertEqual(response.status_code, 400)
-		self.assertEqual(response.get_json(), {"error":"Bad Request","message":"Required attribute missing [firstname]."})
+		self.assertEqual(response.get_json(), {"error":"Bad Request","message":"Field firstname cannot be empty."})
 
 		# Invalid NIP checksum.
 		customer['nip'] = '6666666667'
@@ -113,10 +130,10 @@ class APITest(unittest.TestCase):
 		customer['postal_code'] = ''
 		response = self.client.post('/customers/new', json=customer)
 		self.assertEqual(response.status_code, 400)
-		self.assertEqual(response.get_json(), {"error":"Bad Request","message":"Field [postal_code] has to be a non-empty string."})
+		self.assertEqual(response.get_json(), {"error":"Bad Request","message":"Provided postal code does not comply with the valid format [XX-XXX] where X stands for a digit."})
 
 		# Reset to valid postal code.
-		customer['postal_code'] = '77-423'
+		customer['postal_code'] = '83-050'
 
 		# Invalid attribute type
 		customer['street'] = 12
@@ -129,20 +146,26 @@ class APITest(unittest.TestCase):
 
 		# Get all customers
 		# First create one extra record in DB
-		customer['nip'] = '5831266157'
-		customer['telephone'] = '111222333'
-		customer['email'] = 'hello@gmail.com'
-		customer['company_name'] = 'Efekt'
-		response = self.client.post('/customers/new', json=customer)
-		self.assertEqual(response.status_code, 201)
+		new_customer = {
+			'firstname': 'Jan',
+			'lastname': 'Kowalski',
+			'company_name': 'Efekt',
+			'city': 'Sosnowiec',
+			'street': 'Wiejska 12',
+			'email': 'hello@gmail.com',
+			'postal_code': '83-050',
+			'nip': '5831266157',
+			'telephone': '111222333',
+			'comments': ''
+		}
+		response = self.client.post('/customers/new', json=new_customer)
+		# self.assertEqual(response.status_code, 400)
 		self.assertEqual(response.get_json(), {"added":"1"})
-		response = self.client.get('/customers')
+		response = self.client.get('/customers/')
 		self.assertEqual(response.status_code, 200)
 		self.assertEqual(len(response.get_json()), 2)
-
 		# Get customer by id
 		response = self.client.get('/customers/1')
 		self.assertEqual(response.status_code, 200)
-		self.assertEqual(response.get_json(), {"added":"1"})
-		
+		self.assertEqual(response.get_json(), customer)
 		

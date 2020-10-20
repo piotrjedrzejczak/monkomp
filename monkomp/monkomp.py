@@ -11,16 +11,16 @@ def create_app():
     app.config.from_object(Config)
     db.init_app(app)
 
-    from model.customer import Customer
-    from model.contract import Contract
-    from model.contract_product import contract_products
-    from model.engineer import Engineer
-    from model.field_call import FieldCall
-    from model.product import Product
-    from model.service import Service
+    from monkomp.model.customer import Customer
+    from monkomp.model.contract import Contract
+    from monkomp.model.contract_product import contract_products
+    from monkomp.model.engineer import Engineer
+    from monkomp.model.field_call import FieldCall
+    from monkomp.model.product import Product
+    from monkomp.model.service import Service
     db.create_all(app=app)
 
-    from api.endpoints import api
+    from monkomp.api.endpoints import api
     app.register_blueprint(api)
 
     return app
