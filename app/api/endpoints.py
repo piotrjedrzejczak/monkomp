@@ -1,10 +1,10 @@
 from flask import request
 from flask.json import jsonify
 from sqlalchemy.exc import IntegrityError
+from ..model import db
 from ..model.product import Product
 from ..model.customer import Customer
 from .errors import bad_request, integrity_error_parser
-from ..api import db
 from . import api
 
 

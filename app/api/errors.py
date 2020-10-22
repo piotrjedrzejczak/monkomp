@@ -1,4 +1,4 @@
-from .exceptions import ValidationError
+from ..model.exceptions import ValidationError
 from . import api
 from flask import jsonify
 

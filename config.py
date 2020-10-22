@@ -3,7 +3,7 @@ basedir = os.path.abspath(os.path.dirname(__file__))
 
 
 class Config:
-    SECRET_KEY = 'tajemny klucz'
+    SECRET_KEY = 'tajemnyklucz'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
 

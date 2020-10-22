@@ -1,6 +1,6 @@
 from .engineer import Engineer
 from .service import Service
-from app import db
+from . import db
 
 class FieldCall(db.Model):
     __tablename__ = 'FieldCall'
