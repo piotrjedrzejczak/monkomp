@@ -1,4 +1,4 @@
-from monkomp.monkomp import db
+from app import db
 
 
 class Service(db.Model):

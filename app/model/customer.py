@@ -1,9 +1,9 @@
 from sqlalchemy.orm import validates
 from re import match
-from monkomp.api.exceptions import ValidationError
-from monkomp.monkomp import db
+from ..api.exceptions import ValidationError
 from .contract import Contract
 from .field_call import FieldCall
+from app import db
 
 class Customer(db.Model):
 

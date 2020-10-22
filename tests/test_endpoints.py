@@ -1,6 +1,5 @@
 import unittest
-import json
-from monkomp.monkomp import create_app, db
+from app import create_app, db
 
 
 class APITest(unittest.TestCase):

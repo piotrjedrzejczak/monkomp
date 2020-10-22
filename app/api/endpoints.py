@@ -1,11 +1,11 @@
 from flask import request
 from flask.json import jsonify
 from sqlalchemy.exc import IntegrityError
-from monkomp.model.product import Product
-from monkomp.model.customer import Customer
-from monkomp.api.errors import bad_request, integrity_error_parser
-from monkomp.monkomp import db
-from monkomp.api import api
+from ..model.product import Product
+from ..model.customer import Customer
+from .errors import bad_request, integrity_error_parser
+from ..api import db
+from . import api
 
 
 
@@ -37,7 +37,6 @@ def new_customer():
             db.session.rollback()
             message = integrity_error_parser(error)
             return bad_request(message)
-
 
 
 @api.route('/products/')

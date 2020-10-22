@@ -1,5 +1,5 @@
 from datetime import datetime
-from monkomp.monkomp import db
+from app import db
 
 class Product(db.Model):
 

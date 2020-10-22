@@ -1,7 +1,6 @@
 from .engineer import Engineer
 from .service import Service
-from monkomp.monkomp import db
-
+from app import db
 
 class FieldCall(db.Model):
     __tablename__ = 'FieldCall'
