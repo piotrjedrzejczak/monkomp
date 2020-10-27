@@ -28,6 +28,13 @@ class APITest(unittest.TestCase):
 			'telephone': '111222333',
 			'comments': ''
 		}
+	test_product_1 = {
+		'factory_number': 'abc123',
+		'serial_number': 'xyz123',
+		'name': 'Kasa Fiskalna',
+		'last_service': '2020-10-27 19:49:13.076826',
+		'price': '19999'
+	}
 
 	def setUp(self):
 		self.app = create_app('testing')
@@ -133,7 +140,22 @@ class APITest(unittest.TestCase):
 		self.assertEqual(response.status_code, 200)
 		self.assertEqual(len(response.get_json()), 2)
 
-	def test_get_all_customers(self):
+	def test_get_customer_by_valid_id(self):
 		response = self.client.get('/customers/1')
 		self.assertEqual(response.status_code, 200)
 		self.assertEqual(response.get_json(), self.test_customer_1)
+
+	def test_get_customer_by_invalid_id(self):
+		response = self.client.get('/customers/999999')
+		self.assertEqual(response.status_code, 404)
+		self.assertEqual(response.get_json(), {'error': 'resource not found'})
+
+	def test_add_new_product(self):
+		response = self.client.post('/products/new', json=self.test_product_1)
+		self.assertEqual(response.status_code, 201)
+		self.assertEqual(response.get_json(), {"added":"1"})
+
+	def test_get_product_by_factory_number(self):
+		response = self.client.get('/products/abc123')
+		self.assertEqual(response.status_code, 200)
+		self.assertEqual(response.get_json(), self.test_product_1)

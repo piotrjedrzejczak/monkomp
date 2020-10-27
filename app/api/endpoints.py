@@ -28,34 +28,40 @@ def new_customer():
         return bad_request('Unable to convert the data to JSON format.')
     if not isinstance(payload, dict):
         return bad_request('Request data has to be a valid JSON object.')
-    else:
-        try:
-            db.session.add(Customer.from_dict(payload))
-            db.session.commit()
-            return {"added": "1"}, 201
-        except IntegrityError as error:
-            db.session.rollback()
-            message = integrity_error_parser(error)
-            return bad_request(message)
+    try:
+        db.session.add(Customer.from_dict(payload))
+        db.session.commit()
+        return {"added": "1"}, 201
+    except IntegrityError as error:
+        db.session.rollback()
+        message = integrity_error_parser(error)
+        return bad_request(message)
 
 
 @api.route('/products/')
 def all_products():
-    collection = Customer.query.all()
-    return jsonify([customer.serialize for customer in collection]), 200
+    collection = Product.query.all()
+    return jsonify([product.serialize for product in collection]), 200
 
 
-@api.route("/products/<int:id>")
-def get_product(id):
-    product = Product.query.get_or_404(id)
+@api.route("/products/<fac_num>")
+def get_product(fac_num):
+    product = Product.query.get_or_404(fac_num)
     return jsonify(product.serialize), 200
 
 
-@api.route("/products/new")
+@api.route("/products/new", methods=['POST'])
 def new_product():
     payload = request.get_json(silent=True)
     if payload is None:
         return bad_request('Unable to convert the data to JSON format.')
     if not isinstance(payload, dict):
         return bad_request('Request data has to be a valid JSON object.')
-
+    try:
+        db.session.add(Product.from_dict(payload))
+        db.session.commit()
+        return {"added": "1"}, 201
+    except IntegrityError as error:
+        db.session.rollback()
+        message = integrity_error_parser(error)
+        return bad_request(message)

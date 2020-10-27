@@ -7,6 +7,9 @@ app = create_app('default')
 def test():
     """Run Test Suite"""
     import unittest
-    os.remove('test-db.sqlite')
+    try:
+        os.remove('test-db.sqlite')
+    except FileNotFoundError:
+        pass
     tests = unittest.TestLoader().discover('tests')
     unittest.TextTestRunner(verbosity=2).run(tests)

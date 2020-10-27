@@ -12,6 +12,12 @@ def bad_request(message):
 def validation_error(error):
     return bad_request(error.args[0])
 
+@api.errorhandler(404)
+def resource_not_found(e):
+    response = jsonify({'error': 'resource not found'})
+    response.status_code = 404
+    return response
+
 def integrity_error_parser(error):
     message = repr(error.orig)
     if message.find('UNIQUE') > 0:
