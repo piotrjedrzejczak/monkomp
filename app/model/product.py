@@ -29,11 +29,11 @@ class Product(db.Model):
     def from_dict(cls, serialized):
         try:
             return cls(
-                factory_number=serialized['factory_number'],
-                serial_number=serialized['serial_number'],
-                name=serialized['name'],
-                price=serialized['price'],
-                last_service=datetime.fromisoformat(serialized['last_service'])
+                factory_number=serialized.get('factory_number'),
+                serial_number=serialized.get('serial_number'),
+                name=serialized.get('name'),
+                price=serialized.get('price'),
+                last_service=datetime.fromisoformat(serialized.get('last_service'))
             )
         except ValueError as err:
             raise ValidationError(str(err))

@@ -29,11 +29,18 @@ class APITest(unittest.TestCase):
 			'comments': ''
 		}
 	test_product_1 = {
-		'factory_number': 'abc123',
+		'factory_number': 'kas123',
 		'serial_number': 'xyz123',
-		'name': 'Kasa Fiskalna',
+		'name': '',
 		'last_service': '2020-10-27 19:49:13.076826',
 		'price': '19999'
+	}
+	test_product_2 = {
+		'factory_number': 'ter123',
+		'serial_number': '',
+		'name': 'Terminal',
+		'last_service': '2020-10-28 21:49:22.922116',
+		'price': '35000'
 	}
 
 	def setUp(self):
@@ -155,7 +162,26 @@ class APITest(unittest.TestCase):
 		self.assertEqual(response.status_code, 201)
 		self.assertEqual(response.get_json(), {"added":"1"})
 
+	def test_get_all_products(self):
+		self.client.post('/products/new', json=self.test_product_2)
+		response = self.client.get('/products/')
+		self.assertEqual(response.status_code, 200)
+		self.assertEqual(len(response.get_json()), 2)
+		self.assertEqual(response.get_json(), [self.test_product_1, self.test_product_2])
+
 	def test_get_product_by_factory_number(self):
-		response = self.client.get('/products/abc123')
+		response = self.client.get('/products/kas123')
 		self.assertEqual(response.status_code, 200)
 		self.assertEqual(response.get_json(), self.test_product_1)
+	
+	def test_get_product_by_invalid_factory_number(self):
+		response = self.client.get('/products/99999999asd')
+		self.assertEqual(response.status_code, 404)
+		self.assertEqual(response.get_json(), {'error': 'resource not found'})
+	
+	def test_add_product_with_missing_fields(self):
+		del self.test_product_2['price']
+		response = self.client.post('/products/new', json=self.test_product_2)
+		self.assertEqual(response.status_code, 400)
+		self.assertEqual(response.get_json(), {'error': 'Bad Request', 'message': 'Field price cannot be empty.'})
+		self.test_product_2['price'] = '35000'
