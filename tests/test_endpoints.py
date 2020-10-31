@@ -49,6 +49,7 @@ class APITest(unittest.TestCase):
 		self.app_context.push()
 		db.create_all()
 		self.client = self.app.test_client()
+		self.maxDiff = None
 	
 	def tearDown(self):
 		# db.session.remove()
@@ -73,7 +74,7 @@ class APITest(unittest.TestCase):
 	def test_create_duplicated_customer(self):
 		response = self.client.post('/customers/new', json=self.test_customer_1)
 		self.assertEqual(response.status_code, 400)
-		assert response.get_json()['message'].startswith('Customer with this')
+		self.assertEqual(response.get_json(), {'error':'Bad Request','message':'customer with this telephone already exists.'})
 
 	def test_create_customer_with_invalid_data_type(self):
 		invalid_data_type = 12
@@ -85,7 +86,7 @@ class APITest(unittest.TestCase):
 		customer_missing_fields = {}
 		response = self.client.post('/customers/new', json=customer_missing_fields)
 		self.assertEqual(response.status_code, 400)
-		self.assertEqual(response.get_json(), {"error":"Bad Request","message":"Field firstname cannot be empty."})
+		self.assertEqual(response.get_json(), {"error":"Bad Request","message":"firstname of customer cannot be empty."})
 
 	def test_create_customer_with_invalid_nip(self):
 		self.test_customer_1['nip'] = '6666666667'
@@ -157,10 +158,15 @@ class APITest(unittest.TestCase):
 		self.assertEqual(response.status_code, 404)
 		self.assertEqual(response.get_json(), {'error': 'resource not found'})
 
-	def test_add_new_product(self):
+	def test_add_a_new_product(self):
 		response = self.client.post('/products/new', json=self.test_product_1)
 		self.assertEqual(response.status_code, 201)
 		self.assertEqual(response.get_json(), {"added":"1"})
+	
+	def test_add_duplicated_product(self):
+		response = self.client.post('/products/new', json=self.test_product_1)
+		self.assertEqual(response.status_code, 400)
+		self.assertEqual(response.get_json(), {'error':'Bad Request','message':'product with this serial_number already exists.'})
 
 	def test_get_all_products(self):
 		self.client.post('/products/new', json=self.test_product_2)
@@ -180,8 +186,29 @@ class APITest(unittest.TestCase):
 		self.assertEqual(response.get_json(), {'error': 'resource not found'})
 	
 	def test_add_product_with_missing_fields(self):
-		del self.test_product_2['price']
+		del self.test_product_2['name']
 		response = self.client.post('/products/new', json=self.test_product_2)
 		self.assertEqual(response.status_code, 400)
-		self.assertEqual(response.get_json(), {'error': 'Bad Request', 'message': 'Field price cannot be empty.'})
+		self.assertEqual(response.get_json(), {'error': 'Bad Request', 'message': 'name of product cannot be empty.'})
+		self.test_product_2['name'] = 'Terminal'
+
+	def test_add_product_with_invalid_date_format(self):
+		self.test_product_2['last_service'] = 'zla data'
+		response = self.client.post('/products/new', json=self.test_product_2)
+		self.assertEqual(response.status_code, 400)
+		self.assertEqual(response.get_json(), {'error': 'Bad Request', 'message': "Invalid isoformat string: 'zla data'"})
+		self.test_product_2['last_service'] = '2020-10-28 21:49:22.922116'
+
+	def test_add_product_with_invalid_price(self):
+		self.test_product_2['price'] = 'zla cena'
+		response = self.client.post('/products/new', json=self.test_product_2)
+		self.assertEqual(response.status_code, 400)
+		self.assertEqual(response.get_json(), {'error': 'Bad Request', 'message': "Price has to be a decimal number."})
+		self.test_product_2['price'] = '35000'
+
+	def test_add_product_with_invalid_price_type(self):
+		self.test_product_2['price'] = {}
+		response = self.client.post('/products/new', json=self.test_product_2)
+		self.assertEqual(response.status_code, 400)
+		self.assertEqual(response.get_json(), {'error': 'Bad Request', 'message': "Field price has to be a string, not dict."})
 		self.test_product_2['price'] = '35000'

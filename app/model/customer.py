@@ -50,7 +50,6 @@ class Customer(db.Model):
         except TypeError as err:
             raise ValidationError(str(err))
 
-
     @validates('nip')
     def validate_nip(self, key, nip):
         if len(nip) != 10:

@@ -19,12 +19,10 @@ def resource_not_found(e):
     return response
 
 def integrity_error_parser(error):
-    message = repr(error.orig)
-    if message.find('UNIQUE') > 0:
-        field = message.partition('.')[2][:-2]
-        return f'Customer with this {field} already exists.'
-    elif message.find('NOT NULL') > 0:
-        field = message.partition('.')[2][:-2]
-        return f'Field {field} cannot be empty.'
-    else:
-        return repr(error.orig)
+    constraint, _, tablefield = repr(error.orig.args[0]).partition(':')
+    table, _, field = tablefield.replace("'", "").partition('.')
+    if constraint.startswith("'UNIQUE"):
+        return f'{table.lower().strip()} with this {field} already exists.'
+    if constraint.startswith("'NOT NULL"):
+        return f'{field} of {table.lower().strip()} cannot be empty.'
+    return repr(error.orig)

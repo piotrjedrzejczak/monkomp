@@ -1,3 +1,4 @@
+from sqlalchemy.orm import validates
 from app.model.exceptions import ValidationError
 from datetime import datetime
 from . import db
@@ -15,6 +16,12 @@ class Product(db.Model):
     def __repr__(self):
         return str(self.__dict__)
 
+    @validates('price')
+    def validate_price(self, key, price):
+        if not price.isdecimal():
+            raise ValidationError('Price has to be a decimal number.')
+        return price
+
     @property
     def serialize(self):
         return {
@@ -27,6 +34,9 @@ class Product(db.Model):
 
     @classmethod
     def from_dict(cls, serialized):
+        for key, value in serialized.items():
+            if not isinstance(value, str):
+                raise ValidationError(f'Field {key} has to be a string, not {type(value).__name__}.')
         try:
             return cls(
                 factory_number=serialized.get('factory_number'),
