@@ -17,16 +17,16 @@ class APITest(unittest.TestCase):
 		'comments': ''
 	}
 	test_customer_2 = {
-			'firstname': 'Adam',
-			'lastname': 'Migalski',
-			'company_name': 'Efekt',
-			'city': 'Rzeszów',
-			'street': 'Miejska 2',
-			'email': 'adam@gmail.com',
-			'postal_code': '22-110',
-			'nip': '5831266157',
-			'telephone': '111222333',
-			'comments': ''
+		'firstname': 'Adam',
+		'lastname': 'Migalski',
+		'company_name': 'Efekt',
+		'city': 'Rzeszów',
+		'street': 'Miejska 2',
+		'email': 'adam@gmail.com',
+		'postal_code': '22-110',
+		'nip': '5831266157',
+		'telephone': '111222333',
+		'comments': ''
 		}
 	test_product_1 = {
 		'factory_number': 'kas123',
@@ -42,7 +42,16 @@ class APITest(unittest.TestCase):
 		'last_service': '2020-10-28 21:49:22.922116',
 		'price': '35000'
 	}
-
+	test_service_1 = {
+		'id': '1',
+		'name': 'Fiskalizacja',
+		'rate': '20000'
+	}
+	test_service_2 = {
+		'id': '2',
+		'name': 'Serwis',
+		'rate': '5000'
+	}
 	def setUp(self):
 		self.app = create_app('testing')
 		self.app_context = self.app.app_context()
@@ -146,7 +155,7 @@ class APITest(unittest.TestCase):
 	def test_get_all_customers(self):
 		response = self.client.get('/customers/')
 		self.assertEqual(response.status_code, 200)
-		self.assertEqual(len(response.get_json()), 2)
+		self.assertEqual(response.get_json(), [self.test_customer_1, self.test_customer_2])
 
 	def test_get_customer_by_valid_id(self):
 		response = self.client.get('/customers/1')
@@ -172,7 +181,6 @@ class APITest(unittest.TestCase):
 		self.client.post('/products/new', json=self.test_product_2)
 		response = self.client.get('/products/')
 		self.assertEqual(response.status_code, 200)
-		self.assertEqual(len(response.get_json()), 2)
 		self.assertEqual(response.get_json(), [self.test_product_1, self.test_product_2])
 
 	def test_get_product_by_factory_number(self):
@@ -212,3 +220,50 @@ class APITest(unittest.TestCase):
 		self.assertEqual(response.status_code, 400)
 		self.assertEqual(response.get_json(), {'error': 'Bad Request', 'message': "Field price has to be a string, not dict."})
 		self.test_product_2['price'] = '35000'
+
+	def test_add_a_new_service(self):
+		response = self.client.post('/services/new', json=self.test_service_1)
+		self.assertEqual(response.status_code, 201)
+		self.assertEqual(response.get_json(), {"added":"1"})
+	
+	def test_add_duplicated_service(self):
+		response = self.client.post('/services/new', json=self.test_service_1)
+		self.assertEqual(response.status_code, 400)
+		self.assertEqual(response.get_json(), {'error':'Bad Request','message':'service with this id already exists.'})
+
+	def test_get_all_products(self):
+		self.client.post('/services/new', json=self.test_service_2)
+		response = self.client.get('/services/')
+		self.assertEqual(response.status_code, 200)
+		self.assertEqual(response.get_json(), [self.test_service_1, self.test_service_2])
+
+	def test_get_service_by_id(self):
+		response = self.client.get('/services/1')
+		self.assertEqual(response.status_code, 200)
+		self.assertEqual(response.get_json(), self.test_service_1)
+	
+	def test_get_product_by_invalid_id(self):
+		response = self.client.get('/services/4')
+		self.assertEqual(response.status_code, 404)
+		self.assertEqual(response.get_json(), {'error': 'resource not found'})
+	
+	def test_add_service_with_missing_fields(self):
+		del self.test_service_2['name']
+		response = self.client.post('/services/new', json=self.test_service_2)
+		self.assertEqual(response.status_code, 400)
+		self.assertEqual(response.get_json(), {'error': 'Bad Request', 'message': 'name of service cannot be empty.'})
+		self.test_service_2['name'] = 'Serwis'
+
+	def test_add_product_with_invalid_rate(self):
+		self.test_service_2['rate'] = 'zla cena'
+		response = self.client.post('/services/new', json=self.test_service_2)
+		self.assertEqual(response.status_code, 400)
+		self.assertEqual(response.get_json(), {'error': 'Bad Request', 'message': "Rate has to be a decimal number."})
+		self.test_service_2['rate'] = '5000'
+
+	def test_add_product_with_invalid_rate_type(self):
+		self.test_service_2['rate'] = {}
+		response = self.client.post('/services/new', json=self.test_service_2)
+		self.assertEqual(response.status_code, 400)
+		self.assertEqual(response.get_json(), {'error': 'Bad Request', 'message': "Field rate has to be a string, not dict."})
+		self.test_service_2['rate'] = '5000'

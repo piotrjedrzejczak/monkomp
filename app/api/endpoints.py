@@ -79,18 +79,18 @@ def get_service(id):
     return jsonify(service.serialize), 200
 
 
-# @api.route("/services/new", methods=['POST'])
-# def new_service():
-#     payload = request.get_json(silent=True)
-#     if payload is None:
-#         return bad_request('Unable to convert the data to JSON format.')
-#     if not isinstance(payload, dict):
-#         return bad_request('Request data has to be a valid JSON object.')
-#     try:
-#         db.session.add(Product.from_dict(payload))
-#         db.session.commit()
-#         return {"added": "1"}, 201
-#     except IntegrityError as error:
-#         db.session.rollback()
-#         message = integrity_error_parser(error)
-#         return bad_request(message)
+@api.route("/services/new", methods=['POST'])
+def new_service():
+    payload = request.get_json(silent=True)
+    if payload is None:
+        return bad_request('Unable to convert the data to JSON format.')
+    if not isinstance(payload, dict):
+        return bad_request('Request data has to be a valid JSON object.')
+    try:
+        db.session.add(Service.from_dict(payload))
+        db.session.commit()
+        return {"added": "1"}, 201
+    except IntegrityError as error:
+        db.session.rollback()
+        message = integrity_error_parser(error)
+        return bad_request(message)
