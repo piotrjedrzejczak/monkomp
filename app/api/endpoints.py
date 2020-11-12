@@ -1,34 +1,56 @@
-from flask import request
+from flask import request, g
 from flask.json import jsonify
 from sqlalchemy.exc import IntegrityError
 from ..model import db
 from ..model.product import Product
 from ..model.customer import Customer
 from ..model.service import Service
-from .errors import bad_request, integrity_error_parser
+from .errors import bad_request, integrity_error_parser, unauthorized
 from . import api
 
 
+@api.route("/token", methods=["POST"])
+def get_token():
+    return (
+        jsonify(
+            {
+                "token": g.current_user.generate_auth_token(expiration=3600),
+                "expiration": "3600",
+            }
+        ),
+        200,
+    )
 
-@api.route('/customers/')
+
+@api.route("/engineers/<email>")
+def get_engineer(email):
+    return None
+
+
+@api.route("/engineers/update", methods=["PATCH"])
+def update_engineer():
+    return None
+
+
+@api.route("/customers/")
 def all_customers():
     collection = Customer.query.all()
     return jsonify([customer.serialize for customer in collection]), 200
 
 
-@api.route('/customers/<int:id>')
+@api.route("/customers/<int:id>")
 def get_customer(id):
     customer = Customer.query.get_or_404(id)
     return jsonify(customer.serialize), 200
 
 
-@api.route("/customers/new", methods=['POST'])
+@api.route("/customers/new", methods=["POST"])
 def new_customer():
     payload = request.get_json(silent=True)
     if payload is None:
-        return bad_request('Unable to convert the data to JSON format.')
+        return bad_request("Unable to convert the data to JSON format.")
     if not isinstance(payload, dict):
-        return bad_request('Request data has to be a valid JSON object.')
+        return bad_request("Request data has to be a valid JSON object.")
     try:
         db.session.add(Customer.from_dict(payload))
         db.session.commit()
@@ -39,7 +61,7 @@ def new_customer():
         return bad_request(message)
 
 
-@api.route('/products/')
+@api.route("/products/")
 def all_products():
     collection = Product.query.all()
     return jsonify([product.serialize for product in collection]), 200
@@ -51,13 +73,13 @@ def get_product(fac_num):
     return jsonify(product.serialize), 200
 
 
-@api.route("/products/new", methods=['POST'])
+@api.route("/products/new", methods=["POST"])
 def new_product():
     payload = request.get_json(silent=True)
     if payload is None:
-        return bad_request('Unable to convert the data to JSON format.')
+        return bad_request("Unable to convert the data to JSON format.")
     if not isinstance(payload, dict):
-        return bad_request('Request data has to be a valid JSON object.')
+        return bad_request("Request data has to be a valid JSON object.")
     try:
         db.session.add(Product.from_dict(payload))
         db.session.commit()
@@ -67,7 +89,8 @@ def new_product():
         message = integrity_error_parser(error)
         return bad_request(message)
 
-@api.route('/services/')
+
+@api.route("/services/")
 def all_services():
     collection = Service.query.all()
     return jsonify([service.serialize for service in collection]), 200
@@ -79,13 +102,13 @@ def get_service(id):
     return jsonify(service.serialize), 200
 
 
-@api.route("/services/new", methods=['POST'])
+@api.route("/services/new", methods=["POST"])
 def new_service():
     payload = request.get_json(silent=True)
     if payload is None:
-        return bad_request('Unable to convert the data to JSON format.')
+        return bad_request("Unable to convert the data to JSON format.")
     if not isinstance(payload, dict):
-        return bad_request('Request data has to be a valid JSON object.')
+        return bad_request("Request data has to be a valid JSON object.")
     try:
         db.session.add(Service.from_dict(payload))
         db.session.commit()
