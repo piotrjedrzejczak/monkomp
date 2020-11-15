@@ -5,7 +5,9 @@ from ..model import db
 from ..model.product import Product
 from ..model.customer import Customer
 from ..model.service import Service
-from .errors import bad_request, integrity_error_parser, unauthorized
+from ..model.field_call import FieldCall
+from ..model.contract import Contract
+from .errors import bad_request, integrity_error_parser
 from . import api
 
 
@@ -22,14 +24,14 @@ def get_token():
     )
 
 
-@api.route("/engineers/<email>")
-def get_engineer(email):
-    return None
+@api.route("/engineers/<int:id>")
+def get_engineer(id):
+    raise NotImplementedError
 
 
 @api.route("/engineers/update", methods=["PATCH"])
 def update_engineer():
-    return None
+    raise NotImplementedError
 
 
 @api.route("/customers/")
@@ -111,6 +113,64 @@ def new_service():
         return bad_request("Request data has to be a valid JSON object.")
     try:
         db.session.add(Service.from_dict(payload))
+        db.session.commit()
+        return {"added": "1"}, 201
+    except IntegrityError as error:
+        db.session.rollback()
+        message = integrity_error_parser(error)
+        return bad_request(message)
+
+
+@api.route("/field-calls/")
+def all_field_calls():
+    collection = FieldCall.query.all()
+    return jsonify([field_call.serialize for field_call in collection]), 200
+
+
+@api.route("/field-calls/<int:id>")
+def get_field_call(id):
+    field_call = FieldCall.query.get_or_404(id)
+    return jsonify(field_call.serialize), 200
+
+
+@api.route("/field-calls/new", methods=["POST"])
+def new_field_call():
+    payload = request.get_json(silent=True)
+    if payload is None:
+        return bad_request("Unable to convert the data to JSON format.")
+    if not isinstance(payload, dict):
+        return bad_request("Request data has to be a valid JSON object.")
+    try:
+        db.session.add(FieldCall.from_dict(payload))
+        db.session.commit()
+        return {"added": "1"}, 201
+    except IntegrityError as error:
+        db.session.rollback()
+        message = integrity_error_parser(error)
+        return bad_request(message)
+
+
+@api.route("/contracts/")
+def all_contracts():
+    collection = Contract.query.all()
+    return jsonify([contract.serialize for contract in collection]), 200
+
+
+@api.route("/contracts/<int:id>")
+def get_contract(id):
+    contract = Contract.query.get_or_404(id)
+    return jsonify(contract.serialize), 200
+
+
+@api.route("/contracts/new", methods=["POST"])
+def new_contract():
+    payload = request.get_json(silent=True)
+    if payload is None:
+        return bad_request("Unable to convert the data to JSON format.")
+    if not isinstance(payload, dict):
+        return bad_request("Request data has to be a valid JSON object.")
+    try:
+        db.session.add(Contract.from_dict(payload))
         db.session.commit()
         return {"added": "1"}, 201
     except IntegrityError as error:

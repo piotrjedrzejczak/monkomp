@@ -1,7 +1,7 @@
 from flask import g
 from flask_httpauth import HTTPBasicAuth
 from . import api
-from .errors import forbidden, unauthorized
+from .errors import unauthorized
 from ..model.engineer import Engineer
 
 auth = HTTPBasicAuth()

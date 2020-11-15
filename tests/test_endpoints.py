@@ -48,6 +48,23 @@ class APITest(unittest.TestCase):
     }
     test_service_1 = {"id": "1", "name": "Fiskalizacja", "rate": "20000"}
     test_service_2 = {"id": "2", "name": "Serwis", "rate": "5000"}
+    test_field_call = {
+        "comments": "Wycieczka do klienta",
+        "invoiced": False,
+        "settled": False,
+        "date": "2020-10-30 21:49:22.922116",
+        "total": "30000",
+        "payment_type": "Gotówka",
+        "engineer_id": "1",
+        "service_id": "1",
+        "customer_id": "1",
+    }
+    test_contract = {
+        "account_number": "111122223333444455556666",
+        "signed_on": "2020-10-30 21:49:22.922116",
+        "expires_on": "2021-10-30 21:49:22.922116",
+        "customer_id": "1",
+    }
     test_engineer = {
         "firstname": "piotr",
         "lastname": "jedrzejczak",
@@ -81,7 +98,7 @@ class APITest(unittest.TestCase):
             "Content-Type": "application/json",
         }
 
-	# AUTHENTICATION ENDPOINT
+    # AUTHENTICATION ENDPOINT
 
     def test_auth(self):
         response = self.client.get(
@@ -119,7 +136,7 @@ class APITest(unittest.TestCase):
         response = self.client.get("/customers/", headers=self.get_headers(token, ""))
         self.assertEqual(response.status_code, 200)
 
-	# CUSTOMER ENDPOINT
+    # CUSTOMER ENDPOINT
 
     def test_create_new_customer(self):
         response = self.client.post(
@@ -129,7 +146,7 @@ class APITest(unittest.TestCase):
         )
         self.assertEqual(response.status_code, 201)
         self.assertEqual(response.get_json(), {"added": "1"})
-		# Try to duplicate customer
+        # Try to duplicate customer
         response = self.client.post(
             "/customers/new",
             json=self.test_customer_1,
@@ -366,7 +383,7 @@ class APITest(unittest.TestCase):
         self.assertEqual(response.status_code, 404)
         self.assertEqual(response.get_json(), {"error": "resource not found"})
 
-	# PRODUCT ENDPOINT
+    # PRODUCT ENDPOINT
 
     def test_add_new_product(self):
         response = self.client.post(
@@ -403,8 +420,7 @@ class APITest(unittest.TestCase):
             headers=self.get_headers(self.email, self.password),
         )
         response = self.client.get(
-            "/products/",
-            headers=self.get_headers(self.email, self.password)
+            "/products/", headers=self.get_headers(self.email, self.password)
         )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(
@@ -496,8 +512,9 @@ class APITest(unittest.TestCase):
             headers=self.get_headers(self.email, self.password),
         )
         self.assertEqual(response.status_code, 201)
-        self.assertEqual(response.get_json(), {"added": "1"})\
-        # Try to add a duplicated service
+        self.assertEqual(
+            response.get_json(), {"added": "1"}
+        )  # Try to add a duplicated service
         response = self.client.post(
             "/services/new",
             json=self.test_service_1,
@@ -521,8 +538,7 @@ class APITest(unittest.TestCase):
             headers=self.get_headers(self.email, self.password),
         )
         response = self.client.get(
-            "/services/",
-            headers=self.get_headers(self.email, self.password)
+            "/services/", headers=self.get_headers(self.email, self.password)
         )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(
@@ -592,3 +608,80 @@ class APITest(unittest.TestCase):
             },
         )
         self.test_service_2["rate"] = "5000"
+
+    def test_add_new_field_call(self):
+        self.client.post(
+            "/services/new",
+            json=self.test_service_1,
+            headers=self.get_headers(self.email, self.password),
+        )
+        self.client.post(
+            "/customers/new",
+            json=self.test_customer_1,
+            headers=self.get_headers(self.email, self.password),
+        )
+        response = self.client.post(
+            "/field-calls/new",
+            json=self.test_field_call,
+            headers=self.get_headers(self.email, self.password),
+        )
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.get_json(), {"added": "1"})
+        response = self.client.get(
+            "/field-calls/1",
+            json=self.test_field_call,
+            headers=self.get_headers(self.email, self.password),
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.get_json(),
+            {
+                "comments": "Wycieczka do klienta",
+                "customer": "/customers/1",
+                "date": "Fri, 30 Oct 2020 21:49:22 GMT",
+                "engineer": "/engineers/1",
+                "id": 1,
+                "invoiced": False,
+                "payment_type": "Gotówka",
+                "service": "/services/1",
+                "settled": False,
+                "total": 30000,
+            },
+        )
+        response = self.client.post(
+            "/field-calls/new",
+            json=self.test_field_call,
+            headers=self.get_headers(self.email, self.password),
+        )
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.get_json(), {"added": "1"})
+
+    def test_create_new_contract(self):
+        self.client.post(
+            "/customers/new",
+            json=self.test_customer_1,
+            headers=self.get_headers(self.email, self.password),
+        )
+        response = self.client.post(
+            "/contracts/new",
+            json=self.test_contract,
+            headers=self.get_headers(self.email, self.password),
+        )
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.get_json(), {"added": "1"})
+        response = self.client.get(
+            "/contracts/1",
+            json=self.test_field_call,
+            headers=self.get_headers(self.email, self.password),
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.get_json(),
+            {
+                "id": 1,
+                "account_number": "111122223333444455556666",
+                "signed_on": "Fri, 30 Oct 2020 21:49:22 GMT",
+                "expires_on": "Sat, 30 Oct 2021 21:49:22 GMT",
+                "customer": "/customers/1",
+            },
+        )

@@ -20,7 +20,7 @@ class Engineer(db.Model):
     @property
     def serialize(self):
         return {
-            "id": url_for("api.get_customer", id=self.id),
+            "id": self.id,
             "firstname": self.firstname,
             "lastname": self.lastname,
             "email": self.email,
